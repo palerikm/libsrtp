@@ -1,17 +1,49 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.21)
 
 project(libsrtp2 VERSION 2.6.0 LANGUAGES C)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(PACKAGE_VERSION ${PROJECT_VERSION})
 set(PACKAGE_STRING "${PROJECT_NAME} ${PROJECT_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+
+option(ENABLE_WARNINGS "Enable to add warnings to a target." ON)
+option(ENABLE_WARNINGS_AS_ERRORS "Enable to treat warnings as errors." ON)
+option(ENABLE_CLANG_TIDY "Enable to add clang tidy." ON)
+
+option(ENABLE_SANITIZE_ADDR "Enable address sanitize." ON)
+option(ENABLE_SANITIZE_UNDEF "Enable undefined sanitize." ON)
+option(ENABLE_SANITIZE_LEAK "Enable leak sanitize (Gcc/Clang only)." OFF)
+option(ENABLE_SANITIZE_THREAD "Enable thread sanitize (Gcc/Clang only)." OFF)
+
+option(ENABLE_CLANG_FORMAT "Enable to add clang-format." ON)
+option(ENABLE_CMAKE_FORMAT "Enable to add cmake-format." ON)
+
+option(ENABLE_LTO "Enable to add Link Time Optimization." OFF)
+
+option(LIBSRTP_TEST_APPS "Build libSRTP test applications" OFF)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
+
 include(TestBigEndian)
 include(CheckIncludeFile)
 include(CheckFunctionExists)
 include(CheckTypeSize)
 include(CheckCSourceCompiles)
+include(ConfigSafeGuards)
+include(Tools)
+
+if(ENABLE_WARNINGS)
+    include(Warnings)
+endif()
+
+add_cmake_format_target()
+add_clang_format_target()
 
 test_big_endian(WORDS_BIGENDIAN)
 
@@ -59,10 +91,12 @@ set(ERR_REPORTING_FILE "" CACHE FILEPATH "Use file for logging")
 set(ENABLE_OPENSSL OFF CACHE BOOL "Enable OpenSSL crypto engine")
 set(ENABLE_MBEDTLS OFF CACHE BOOL "Enable MbedTLS crypto engine")
 set(ENABLE_NSS OFF CACHE BOOL "Enable NSS crypto engine")
-option(LIBSRTP_TEST_APPS "Build libSRTP test applications" ON)
-set(BUILD_WITH_SANITIZERS OFF CACHE BOOL "Adds sanitizer flags to compiler")
-set(BUILD_WITH_WARNINGS ON CACHE BOOL "Adds warnings and warning as error flags to compiler")
-option(BUILD_SHARED_LIBS "Build shared library" OFF)
+#set(BUILD_WITH_SANITIZERS OFF CACHE BOOL "Adds sanitizer flags to compiler")
+#set(BUILD_WITH_WARNINGS ON CACHE BOOL "Adds warnings and warning as error flags to compiler")
+
+
+
+
 
 if(ENABLE_OPENSSL OR ENABLE_MBEDTLS OR ENABLE_NSS)
   set(USE_EXTERNAL_CRYPTO TRUE)
@@ -103,30 +137,40 @@ include_directories(${CONFIG_FILE_DIR})
 configure_file(config_in_cmake.h ${CONFIG_FILE_DIR}/config.h)
 add_definitions(-DHAVE_CONFIG_H)
 
-if(BUILD_WITH_SANITIZERS AND NOT WIN32)
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(SANITIZERS address,undefined)
-  else()
-    set(SANITIZERS leak,address,undefined)
-  endif()
-  message(STATUS "Using sanitizers: ${SANITIZERS}")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
+if(ENABLE_SANITIZE_ADDR OR ENABLE_SANITIZE_UNDEF)
+    include(Sanitizer)
+    add_sanitizer_flags()
+endif()
+
+if(ENABLE_LTO)
+    include(LTO)
 endif()
 
 
-if(BUILD_WITH_WARNINGS)
-  if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU")
-    set(WARNINGS -Wall -pedantic -Wextra -Werror)
-  elseif(MSVC)
-    set(WARNINGS /W4 /WX)
-  endif()
-  message(STATUS "Using warnings: ${WARNINGS}")
-  add_compile_options(${WARNINGS})
-endif()
+#if(BUILD_WITH_SANITIZERS AND NOT WIN32)
+#  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#    set(SANITIZERS address,undefined)
+#  else()
+#    set(SANITIZERS leak,address,undefined)
+#  endif()
+#  message(STATUS "Using sanitizers: ${SANITIZERS}")
+#  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
+#  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
+#  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
+#  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
+#endif()
+
+
+#if(BUILD_WITH_WARNINGS)
+#  if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU")
+#    set(WARNINGS -Wall -pedantic -Wextra -Werror)
+#  elseif(MSVC)
+#    set(WARNINGS /W4 /WX)
+#  endif()
+#  message(STATUS "Using warnings: ${WARNINGS}")
+#  add_compile_options(${WARNINGS})
+#endif()
 
 set(SOURCES_C
   srtp/srtp.c
@@ -251,6 +295,29 @@ add_library(srtp2
   ${SOURCES_H}
 )
 add_library(libSRTP::srtp2 ALIAS srtp2)
+
+if (${ENABLE_WARNINGS})
+    target_set_warnings(
+            TARGET
+            "srtp2"
+            ENABLE
+            ${ENABLE_WARNINGS}
+            AS_ERRORS
+            ${ENABLE_WARNINGS_AS_ERRORS})
+endif()
+
+if(${ENABLE_LTO})
+    target_enable_lto(
+            TARGET
+            "srtp2"
+            ENABLE
+            ON)
+endif()
+
+if(${ENABLE_CLANG_TIDY})
+    add_clang_tidy_to_target("srtp2")
+endif()
+
 
 set_target_properties(srtp2 PROPERTIES VERSION ${PROJECT_VERSION})
 
