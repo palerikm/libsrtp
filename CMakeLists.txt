@@ -36,14 +36,11 @@ include(CheckFunctionExists)
 include(CheckTypeSize)
 include(CheckCSourceCompiles)
 include(ConfigSafeGuards)
-include(Tools)
 
 if(ENABLE_WARNINGS)
     include(Warnings)
 endif()
 
-add_cmake_format_target()
-add_clang_format_target()
 
 test_big_endian(WORDS_BIGENDIAN)
 
@@ -312,10 +309,6 @@ if(${ENABLE_LTO})
             "srtp2"
             ENABLE
             ON)
-endif()
-
-if(${ENABLE_CLANG_TIDY})
-    add_clang_tidy_to_target("srtp2")
 endif()
 
 
