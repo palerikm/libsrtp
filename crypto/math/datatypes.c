@@ -72,17 +72,17 @@
 /* include space for null terminator */
 static char bit_string[MAX_PRINT_STRING_LEN + 1];
 
-static uint8_t srtp_nibble_to_hex_char(uint8_t nibble)
+static char srtp_nibble_to_hex_char(uint8_t nibble)
 {
     static const char buf[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                   '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     return buf[nibble & 0xF];
 }
 
-char *srtp_octet_string_hex_string(const void *s, int length)
+char *srtp_octet_string_hex_string(const void *s, size_t length)
 {
     const uint8_t *str = (const uint8_t *)s;
-    int i;
+    size_t i;
 
     /* double length, since one octet takes two hex characters */
     length *= 2;
@@ -255,9 +255,9 @@ void v128_left_shift(v128_t *x, int shift)
 
 /* functions manipulating bitvector_t */
 
-int bitvector_alloc(bitvector_t *v, unsigned long length)
+int bitvector_alloc(bitvector_t *v, size_t length)
 {
-    unsigned long l;
+    size_t l;
 
     /* Round length up to a multiple of bits_per_word */
     length =
@@ -372,7 +372,7 @@ void bitvector_left_shift(bitvector_t *x, int shift)
     int i;
     const int base_index = shift >> 5;
     const int bit_index = shift & 31;
-    const int word_length = x->length >> 5;
+    const int word_length = (int)x->length >> 5;
 
     if (shift >= (int)x->length) {
         bitvector_set_to_zero(x);
@@ -397,7 +397,7 @@ void bitvector_left_shift(bitvector_t *x, int shift)
 
 #endif /* defined(__SSSE3__) */
 
-int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, int len)
+int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, size_t len)
 {
     /*
      * We use this somewhat obscure implementation to try to ensure the running
@@ -448,7 +448,7 @@ int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, int len)
     accumulator = _mm_cvtsi128_si32(mm_accumulator1);
 #else
     uint32_t accumulator2 = 0;
-    for (int i = 0, n = len >> 3; i < n; ++i, a += 8, b += 8) {
+    for (int i = 0, n = (int)len >> 3; i < n; ++i, a += 8, b += 8) {
         uint32_t a_val1, b_val1;
         uint32_t a_val2, b_val2;
         memcpy(&a_val1, a, sizeof(a_val1));

@@ -84,7 +84,7 @@ srtp_stream_t srtp_get_stream(srtp_t srtp, uint32_t ssrc);
  */
 srtp_err_status_t srtp_stream_init_keys(srtp_stream_ctx_t *srtp,
                                         srtp_master_key_t *master_key,
-                                        const unsigned int current_mki_index);
+                                        const size_t current_mki_index);
 
 /*
  * srtp_stream_init_all_master_keys(s, k, m) (re)initializes the srtp_stream_t s
@@ -134,7 +134,7 @@ typedef struct srtp_session_keys_t {
 typedef struct srtp_stream_ctx_t_ {
     uint32_t ssrc;
     srtp_session_keys_t *session_keys;
-    unsigned int num_master_keys;
+    size_t num_master_keys;
     srtp_rdbx_t rtp_rdbx;
     srtp_sec_serv_t rtp_services;
     srtp_rdb_t rtcp_rdb;
@@ -142,7 +142,7 @@ typedef struct srtp_stream_ctx_t_ {
     direction_t direction;
     int allow_repeat_tx;
     int *enc_xtn_hdr;
-    int enc_xtn_hdr_count;
+    size_t enc_xtn_hdr_count;
     uint32_t pending_roc;
     /*
     The next and prev pointers are here to allow for a stream list to be

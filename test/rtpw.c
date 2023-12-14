@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
     unsigned char ttl = 5;
     int c;
     int key_size = 128;
-    int tag_size = 8;
+    size_t tag_size = 8;
     int gcm_on = 0;
     char *input_key = NULL;
     int b64_input = 0;
@@ -160,8 +160,8 @@ int main(int argc, char *argv[])
     rtp_sender_t snd;
     srtp_policy_t policy;
     srtp_err_status_t status;
-    int len;
-    int expected_len;
+    size_t len;
+    size_t expected_len;
     int do_list_mods = 0;
     uint32_t ssrc = 0xdeadbeef; /* ssrc value hardcoded for now */
 #ifdef RTPW_USE_WINSOCK2
@@ -214,9 +214,9 @@ int main(int argc, char *argv[])
             sec_servs |= sec_serv_conf;
             break;
         case 't':
-            tag_size = atoi(optarg_s);
+            tag_size = (size_t)atoi(optarg_s);
             if (tag_size != 8 && tag_size != 16) {
-                printf("error: GCM tag size must be 8 or 16 (%d)\n", tag_size);
+                printf("error: GCM tag size must be 8 or 16 (%zu)\n", tag_size);
                 exit(1);
             }
             break;
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     address = argv[optind_s++];
 
     /* get port from arg */
-    port = atoi(argv[optind_s++]);
+    port = (unsigned short)atoi(argv[optind_s++]);
 
 /* set address */
 #ifdef HAVE_INET_PTON
@@ -469,30 +469,31 @@ int main(int argc, char *argv[])
          * string
          */
         if (b64_input) {
-            int pad;
+            size_t pad;
             expected_len = (policy.rtp.cipher_key_len * 4) / 3;
             len = base64_string_to_octet_string(key, &pad, input_key,
-                                                expected_len);
+                                                        expected_len);
             if (pad != 0) {
                 fprintf(stderr, "error: padding in base64 unexpected\n");
                 exit(1);
             }
         } else {
             expected_len = policy.rtp.cipher_key_len * 2;
-            len = hex_string_to_octet_string(key, input_key, expected_len);
+            len = hex_string_to_octet_string(key, input_key,
+                                                     expected_len);
         }
         /* check that hex string is the right length */
         if (len < expected_len) {
             fprintf(stderr,
                     "error: too few digits in key/salt "
-                    "(should be %d digits, found %d)\n",
+                    "(should be %zu digits, found %zu)\n",
                     expected_len, len);
             exit(1);
         }
-        if ((int)strlen(input_key) > policy.rtp.cipher_key_len * 2) {
+        if (strlen(input_key) > policy.rtp.cipher_key_len * 2) {
             fprintf(stderr,
                     "error: too many digits in key/salt "
-                    "(should be %d hexadecimal digits, found %u)\n",
+                    "(should be %zu hexadecimal digits, found %u)\n",
                     policy.rtp.cipher_key_len * 2, (unsigned)strlen(input_key));
             exit(1);
         }

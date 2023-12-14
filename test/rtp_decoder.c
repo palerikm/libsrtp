@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
          * string
          */
         if (b64_input) {
-            int pad;
+            size_t pad;
             expected_len = policy.rtp.cipher_key_len * 4 / 3;
             len = base64_string_to_octet_string(key, &pad, input_key,
                                                 strlen(input_key));
@@ -559,7 +559,7 @@ int main(int argc, char *argv[])
         if (strlen(input_key) > (size_t)policy.rtp.cipher_key_len * 2) {
             fprintf(stderr,
                     "error: too many digits in key/salt "
-                    "(should be %d hexadecimal digits, found %u)\n",
+                    "(should be %zu hexadecimal digits, found %u)\n",
                     policy.rtp.cipher_key_len * 2, (unsigned)strlen(input_key));
             exit(1);
         }
@@ -738,7 +738,7 @@ void rtp_decoder_handle_pkt(u_char *arg,
     int rtp;
     int pktsize;
     struct timeval delta;
-    int octets_recvd;
+    size_t octets_recvd;
     srtp_err_status_t status;
     dcdr->frame_nr++;
 

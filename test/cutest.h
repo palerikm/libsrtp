@@ -23,6 +23,8 @@
  * IN THE SOFTWARE.
  */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
 #ifndef CUTEST_H__
 #define CUTEST_H__
 
@@ -150,6 +152,8 @@ static int test_colorize__ = 0;
 #define CUTEST_COLOR_GREEN_INTENSIVE__ 4
 #define CUTEST_COLOR_RED_INTENSIVE__ 5
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
 static size_t test_print_in_color__(int color, const char *fmt, ...)
 {
     va_list args;
@@ -162,7 +166,7 @@ static size_t test_print_in_color__(int color, const char *fmt, ...)
     buffer[sizeof(buffer) - 1] = '\0';
 
     if (!test_colorize__) {
-        return printf("%s", buffer);
+        return (size_t)printf("%s", buffer);
     }
 
 #if defined CUTEST_UNIX__
@@ -189,7 +193,7 @@ static size_t test_print_in_color__(int color, const char *fmt, ...)
             break;
         }
         printf("%s", col_str);
-        n = printf("%s", buffer);
+        n = (size_t)printf("%s", buffer);
         printf("\033[0m");
         return n;
     }
@@ -234,6 +238,7 @@ static size_t test_print_in_color__(int color, const char *fmt, ...)
     return n;
 #endif
 }
+#pragma clang diagnostic pop
 
 int test_check__(int cond, const char *file, int line, const char *fmt, ...)
 {
@@ -590,7 +595,7 @@ int main(int argc, char **argv)
     for (i = 1; i < argc; i++) {
         if (seen_double_dash || argv[i][0] != '-') {
             tests = (const struct test__ **)realloc(
-                (void *)tests, (n + 1) * sizeof(const struct test__ *));
+                (void *)tests, ((unsigned long)(n + 1)) * sizeof(const struct test__ *));
             if (tests == NULL) {
                 fprintf(stderr, "Out of memory.\n");
                 exit(2);
@@ -711,3 +716,5 @@ int main(int argc, char **argv)
 #endif
 
 #endif /* #ifndef CUTEST_H__ */
+
+#pragma clang diagnostic pop

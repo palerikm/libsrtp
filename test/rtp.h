@@ -100,9 +100,9 @@ typedef struct rtp_sender_ctx_t *rtp_sender_t;
 
 typedef struct rtp_receiver_ctx_t *rtp_receiver_t;
 
-int rtp_sendto(rtp_sender_t sender, const void *msg, int len);
+ssize_t rtp_sendto(rtp_sender_t sender, const void *msg, size_t len);
 
-int rtp_recvfrom(rtp_receiver_t receiver, void *msg, int *len);
+ssize_t rtp_recvfrom(rtp_receiver_t receiver, void *msg, size_t *len);
 
 int rtp_receiver_init(rtp_receiver_t rcvr,
                       int sock,
@@ -132,13 +132,13 @@ int srtp_receiver_init(
     unsigned char *input_key           /* master key/salt in hex  */
 );
 
-int rtp_sender_init_srtp(rtp_sender_t sender, const srtp_policy_t *policy);
+srtp_err_status_t rtp_sender_init_srtp(rtp_sender_t sender, const srtp_policy_t *policy);
 
-int rtp_sender_deinit_srtp(rtp_sender_t sender);
+srtp_err_status_t rtp_sender_deinit_srtp(rtp_sender_t sender);
 
-int rtp_receiver_init_srtp(rtp_receiver_t sender, const srtp_policy_t *policy);
+srtp_err_status_t rtp_receiver_init_srtp(rtp_receiver_t sender, const srtp_policy_t *policy);
 
-int rtp_receiver_deinit_srtp(rtp_receiver_t sender);
+srtp_err_status_t rtp_receiver_deinit_srtp(rtp_receiver_t sender);
 
 rtp_sender_t rtp_sender_alloc(void);
 

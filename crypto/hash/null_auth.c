@@ -54,19 +54,19 @@
 #include "cipher_types.h"
 
 static srtp_err_status_t srtp_null_auth_alloc(srtp_auth_t **a,
-                                              int key_len,
-                                              int out_len)
+                                              size_t key_len,
+                                              size_t out_len)
 {
     extern const srtp_auth_type_t srtp_null_auth;
-    uint8_t *pointer;
+    srtp_auth_t *pointer;
 
     debug_print(srtp_mod_auth, "allocating auth func with key length %d",
-                key_len);
+                (int)key_len);
     debug_print(srtp_mod_auth, "                          tag length %d",
-                out_len);
+                (int)out_len);
 
     /* allocate memory for auth and srtp_null_auth_ctx_t structures */
-    pointer = (uint8_t *)srtp_crypto_alloc(sizeof(srtp_null_auth_ctx_t) +
+    pointer = srtp_crypto_alloc(sizeof(srtp_null_auth_ctx_t) +
                                            sizeof(srtp_auth_t));
     if (pointer == NULL) {
         return srtp_err_status_alloc_fail;
@@ -99,7 +99,7 @@ static srtp_err_status_t srtp_null_auth_dealloc(srtp_auth_t *a)
 
 static srtp_err_status_t srtp_null_auth_init(void *statev,
                                              const uint8_t *key,
-                                             int key_len)
+                                             size_t key_len)
 {
     /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
     (void)statev;
@@ -113,8 +113,8 @@ static srtp_err_status_t srtp_null_auth_init(void *statev,
 
 static srtp_err_status_t srtp_null_auth_compute(void *statev,
                                                 const uint8_t *message,
-                                                int msg_octets,
-                                                int tag_len,
+                                                size_t msg_octets,
+                                                size_t tag_len,
                                                 uint8_t *result)
 {
     /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
@@ -129,7 +129,7 @@ static srtp_err_status_t srtp_null_auth_compute(void *statev,
 
 static srtp_err_status_t srtp_null_auth_update(void *statev,
                                                const uint8_t *message,
-                                               int msg_octets)
+                                               size_t msg_octets)
 {
     /* srtp_null_auth_ctx_t *state = (srtp_null_auth_ctx_t *)statev; */
     (void)statev;
@@ -171,7 +171,7 @@ static const char srtp_null_auth_description[] = "null authentication function";
 const srtp_auth_type_t srtp_null_auth = {
     srtp_null_auth_alloc,        /* */
     srtp_null_auth_dealloc,      /* */
-    srtp_null_auth_init,         /* */
+    (srtp_auth_init_func)srtp_null_auth_init,         /* */
     srtp_null_auth_compute,      /* */
     srtp_null_auth_update,       /* */
     srtp_null_auth_start,        /* */

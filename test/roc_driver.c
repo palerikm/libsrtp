@@ -74,7 +74,7 @@ int main(void)
     status = roc_test(1 << 18);
     if (status) {
         printf("failed\n");
-        exit(status);
+        exit((int)status);
     }
     printf("passed\n");
     return 0;
@@ -137,7 +137,7 @@ srtp_err_status_t roc_test(int num_trials)
                local, est, ircvd, delta);
 #endif
 
-        if (local + delta != est) {
+        if (local + (srtp_xtd_seq_num_t)delta != est) {
             printf(" *bad delta*: local %llu + delta %d != est %llu\n",
                    (unsigned long long)local, delta, (unsigned long long)est);
             return srtp_err_status_algo_fail;

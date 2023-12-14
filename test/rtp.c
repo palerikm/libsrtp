@@ -58,11 +58,11 @@
 #define PRINT_DEBUG 0   /* set to 1 to print out debugging data */
 #define VERBOSE_DEBUG 0 /* set to 1 to print out more data      */
 
-int rtp_sendto(rtp_sender_t sender, const void *msg, int len)
+ssize_t rtp_sendto(rtp_sender_t sender, const void *msg, size_t len)
 {
-    int octets_sent;
+    ssize_t octets_sent;
     srtp_err_status_t stat;
-    int pkt_len = len + RTP_HEADER_LEN;
+    size_t pkt_len = len + RTP_HEADER_LEN;
 
     /* marshal data */
     strncpy(sender->message.body, msg, len);
@@ -74,7 +74,8 @@ int rtp_sendto(rtp_sender_t sender, const void *msg, int len)
     sender->message.header.ts = htonl(sender->message.header.ts);
 
     /* apply srtp */
-    stat = srtp_protect(sender->srtp_ctx, &sender->message.header, &pkt_len);
+    stat = srtp_protect(sender->srtp_ctx, &sender->message.header,
+                        (size_t *)&pkt_len);
     if (stat) {
 #if PRINT_DEBUG
         fprintf(stderr, "error: srtp protection failed with code %d\n", stat);
@@ -85,22 +86,24 @@ int rtp_sendto(rtp_sender_t sender, const void *msg, int len)
     srtp_print_packet(&sender->message.header, pkt_len);
 #endif
     octets_sent =
-        sendto(sender->socket, (void *)&sender->message, pkt_len, 0,
+        sendto(sender->socket, (void *)&sender->message, (size_t)pkt_len, 0,
                (struct sockaddr *)&sender->addr, sizeof(struct sockaddr_in));
 
-    if (octets_sent != pkt_len) {
 #if PRINT_DEBUG
+    if (octets_sent != pkt_len) {
+
         fprintf(stderr, "error: couldn't send message %s", (char *)msg);
         perror("");
-#endif
+
     }
+#endif
 
     return octets_sent;
 }
 
-int rtp_recvfrom(rtp_receiver_t receiver, void *msg, int *len)
+ssize_t rtp_recvfrom(rtp_receiver_t receiver, void *msg, size_t *len)
 {
-    int octets_recvd;
+    ssize_t octets_recvd;
     srtp_err_status_t stat;
 
     octets_recvd = recvfrom(receiver->socket, (void *)&receiver->message, *len,
@@ -127,7 +130,7 @@ int rtp_recvfrom(rtp_receiver_t receiver, void *msg, int *len)
 
     /* apply srtp */
     stat = srtp_unprotect(receiver->srtp_ctx, &receiver->message.header,
-                          &octets_recvd);
+                          (size_t *)&octets_recvd);
     if (stat) {
         fprintf(stderr, "error: srtp unprotection failed with code %d%s\n",
                 stat,
@@ -136,7 +139,7 @@ int rtp_recvfrom(rtp_receiver_t receiver, void *msg, int *len)
                                                     : "");
         return -1;
     }
-    strncpy(msg, receiver->message.body, octets_recvd);
+    strncpy(msg, receiver->message.body, (size_t)octets_recvd);
 
     return octets_recvd;
 }
@@ -187,22 +190,22 @@ int rtp_receiver_init(rtp_receiver_t rcvr,
     return 0;
 }
 
-int rtp_sender_init_srtp(rtp_sender_t sender, const srtp_policy_t *policy)
+srtp_err_status_t rtp_sender_init_srtp(rtp_sender_t sender, const srtp_policy_t *policy)
 {
     return srtp_create(&sender->srtp_ctx, policy);
 }
 
-int rtp_sender_deinit_srtp(rtp_sender_t sender)
+srtp_err_status_t rtp_sender_deinit_srtp(rtp_sender_t sender)
 {
     return srtp_dealloc(sender->srtp_ctx);
 }
 
-int rtp_receiver_init_srtp(rtp_receiver_t sender, const srtp_policy_t *policy)
+srtp_err_status_t rtp_receiver_init_srtp(rtp_receiver_t sender, const srtp_policy_t *policy)
 {
     return srtp_create(&sender->srtp_ctx, policy);
 }
 
-int rtp_receiver_deinit_srtp(rtp_receiver_t sender)
+srtp_err_status_t rtp_receiver_deinit_srtp(rtp_receiver_t sender)
 {
     return srtp_dealloc(sender->srtp_ctx);
 }

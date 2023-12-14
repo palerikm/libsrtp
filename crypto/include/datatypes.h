@@ -79,7 +79,7 @@ typedef union {
 
 #define MAX_PRINT_STRING_LEN 1024
 
-char *srtp_octet_string_hex_string(const void *str, int length);
+char *srtp_octet_string_hex_string(const void *str, size_t length);
 
 char *v128_bit_string(v128_t *x);
 
@@ -163,7 +163,7 @@ void v128_left_shift(v128_t *x, int shift_index);
  * verifying authentication tags.
  */
 
-int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, int len);
+int srtp_octet_string_is_eq(uint8_t *a, uint8_t *b, size_t len);
 
 /*
  * A portable way to zero out memory as recommended by
@@ -248,7 +248,7 @@ static inline uint64_t be64_to_cpu(uint64_t v)
 #define bytes_per_word 4
 
 typedef struct {
-    uint32_t length;
+    size_t length;
     uint32_t *word;
 } bitvector_t;
 
@@ -260,7 +260,7 @@ typedef struct {
 
 #define bitvector_get_length(v) (((v)->length))
 
-int bitvector_alloc(bitvector_t *v, unsigned long length);
+int bitvector_alloc(bitvector_t *v, size_t length);
 
 void bitvector_dealloc(bitvector_t *v);
 

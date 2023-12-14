@@ -183,7 +183,7 @@ srtp_err_status_t srtp_crypto_kernel_status(void)
         if (status) {
             srtp_err_report(srtp_err_level_error, "failed with error code %d\n",
                             status);
-            exit(status);
+            exit((int)status);
         }
         srtp_err_report(srtp_err_level_info, "passed\n");
         ctype = ctype->next;
@@ -198,7 +198,7 @@ srtp_err_status_t srtp_crypto_kernel_status(void)
         if (status) {
             srtp_err_report(srtp_err_level_error, "failed with error code %d\n",
                             status);
-            exit(status);
+            exit((int)status);
         }
         srtp_err_report(srtp_err_level_info, "passed\n");
         atype = atype->next;
@@ -443,8 +443,8 @@ const srtp_cipher_type_t *srtp_crypto_kernel_get_cipher_type(
 
 srtp_err_status_t srtp_crypto_kernel_alloc_cipher(srtp_cipher_type_id_t id,
                                                   srtp_cipher_pointer_t *cp,
-                                                  int key_len,
-                                                  int tag_len)
+                                                  size_t key_len,
+                                                  size_t tag_len)
 {
     const srtp_cipher_type_t *ct;
 
@@ -483,8 +483,8 @@ const srtp_auth_type_t *srtp_crypto_kernel_get_auth_type(srtp_auth_type_id_t id)
 
 srtp_err_status_t srtp_crypto_kernel_alloc_auth(srtp_auth_type_id_t id,
                                                 srtp_auth_pointer_t *ap,
-                                                int key_len,
-                                                int tag_len)
+                                                size_t key_len,
+                                                size_t tag_len)
 {
     const srtp_auth_type_t *at;
 

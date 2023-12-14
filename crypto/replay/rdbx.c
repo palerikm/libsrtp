@@ -47,6 +47,7 @@
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include "rdbx.h"
 
 /*
@@ -119,7 +120,7 @@ void srtp_index_advance(srtp_xtd_seq_num_t *pi, srtp_sequence_number_t s)
  * unsigned integer!
  */
 
-int32_t srtp_index_guess(const srtp_xtd_seq_num_t *local,
+int srtp_index_guess(const srtp_xtd_seq_num_t *local,
                          srtp_xtd_seq_num_t *guess,
                          srtp_sequence_number_t s)
 {
@@ -132,7 +133,7 @@ int32_t srtp_index_guess(const srtp_xtd_seq_num_t *local,
 #endif
     uint32_t guess_roc;
     uint16_t guess_seq;
-    int32_t difference;
+    int difference;
 
     if (local_seq < seq_num_median) {
         if (s - local_seq > seq_num_median) {
@@ -252,12 +253,13 @@ srtp_err_status_t srtp_rdbx_check(const srtp_rdbx_t *rdbx, int delta)
 {
     if (delta > 0) { /* if delta is positive, it's good */
         return srtp_err_status_ok;
-    } else if ((int)(bitvector_get_length(&rdbx->bitmask) - 1) + delta < 0) {
+    } else if ((bitvector_get_length(&rdbx->bitmask) - 1) + (size_t)delta < 0) {
         /* if delta is lower than the bitmask, it's bad */
         return srtp_err_status_replay_old;
     } else if (bitvector_get_bit(
                    &rdbx->bitmask,
-                   (int)(bitvector_get_length(&rdbx->bitmask) - 1) + delta) ==
+                   (bitvector_get_length(&rdbx->bitmask) - 1) +
+                                     (size_t)delta) ==
                1) {
         /* delta is within the window, so check the bitmask */
         return srtp_err_status_replay_fail;
@@ -283,10 +285,11 @@ srtp_err_status_t srtp_rdbx_add_index(srtp_rdbx_t *rdbx, int delta)
         bitvector_left_shift(&rdbx->bitmask, delta);
         bitvector_set_bit(&rdbx->bitmask,
                           bitvector_get_length(&rdbx->bitmask) - 1);
-    } else {
+    } else if(delta < INT_MAX) {
         /* delta is in window */
         bitvector_set_bit(&rdbx->bitmask,
-                          bitvector_get_length(&rdbx->bitmask) - 1 + delta);
+                          bitvector_get_length(&rdbx->bitmask) - 1 + (uint32_t)
+                                                                         delta);
     }
 
     /* note that we need not consider the case that delta == 0 */
@@ -302,7 +305,7 @@ srtp_err_status_t srtp_rdbx_add_index(srtp_rdbx_t *rdbx, int delta)
  * index to which s corresponds, and returns the difference between
  * *guess and the locally stored synch info
  */
-int32_t srtp_rdbx_estimate_index(const srtp_rdbx_t *rdbx,
+int srtp_rdbx_estimate_index(const srtp_rdbx_t *rdbx,
                                  srtp_xtd_seq_num_t *guess,
                                  srtp_sequence_number_t s)
 {

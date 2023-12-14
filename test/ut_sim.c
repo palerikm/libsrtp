@@ -62,7 +62,7 @@ int ut_compar(const void *a, const void *b)
 
 void ut_init(ut_connection *utc)
 {
-    int i;
+    uint32_t i;
     utc->index = 0;
 
     for (i = 0; i < UT_BUF; i++)
