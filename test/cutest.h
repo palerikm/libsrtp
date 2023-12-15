@@ -23,8 +23,6 @@
  * IN THE SOFTWARE.
  */
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wformat-nonliteral"
 #ifndef CUTEST_H__
 #define CUTEST_H__
 
@@ -159,7 +157,6 @@ static size_t test_print_in_color__(int color, const char *fmt, ...)
     size_t n;
 
     va_start(args, fmt);
-
     vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
     buffer[sizeof(buffer) - 1] = '\0';
@@ -714,5 +711,3 @@ int main(int argc, char **argv)
 #endif
 
 #endif /* #ifndef CUTEST_H__ */
-
-#pragma clang diagnostic pop
