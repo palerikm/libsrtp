@@ -23,7 +23,7 @@ option(ENABLE_SANITIZE_THREAD "Enable thread sanitize (Gcc/Clang only)." OFF)
 
 option(ENABLE_LTO "Enable to add Link Time Optimization." OFF)
 
-option(LIBSRTP_TEST_APPS "Build libSRTP test applications" OFF)
+option(LIBSRTP_TEST_APPS "Build libSRTP test applications" ON)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 
 include(TestBigEndian)
@@ -84,12 +84,6 @@ set(ERR_REPORTING_FILE "" CACHE FILEPATH "Use file for logging")
 set(ENABLE_OPENSSL OFF CACHE BOOL "Enable OpenSSL crypto engine")
 set(ENABLE_MBEDTLS OFF CACHE BOOL "Enable MbedTLS crypto engine")
 set(ENABLE_NSS OFF CACHE BOOL "Enable NSS crypto engine")
-#set(BUILD_WITH_SANITIZERS OFF CACHE BOOL "Adds sanitizer flags to compiler")
-#set(BUILD_WITH_WARNINGS ON CACHE BOOL "Adds warnings and warning as error flags to compiler")
-
-
-
-
 
 if(ENABLE_OPENSSL OR ENABLE_MBEDTLS OR ENABLE_NSS)
   set(USE_EXTERNAL_CRYPTO TRUE)
@@ -138,32 +132,6 @@ endif()
 if(ENABLE_LTO)
     include(LTO)
 endif()
-
-
-#if(BUILD_WITH_SANITIZERS AND NOT WIN32)
-#  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-#    set(SANITIZERS address,undefined)
-#  else()
-#    set(SANITIZERS leak,address,undefined)
-#  endif()
-#  message(STATUS "Using sanitizers: ${SANITIZERS}")
-#  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-#  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-#  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-#  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZERS}")
-#endif()
-
-
-#if(BUILD_WITH_WARNINGS)
-#  if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID MATCHES "GNU")
-#    set(WARNINGS -Wall -pedantic -Wextra -Werror)
-#  elseif(MSVC)
-#    set(WARNINGS /W4 /WX)
-#  endif()
-#  message(STATUS "Using warnings: ${WARNINGS}")
-#  add_compile_options(${WARNINGS})
-#endif()
 
 set(SOURCES_C
   srtp/srtp.c
